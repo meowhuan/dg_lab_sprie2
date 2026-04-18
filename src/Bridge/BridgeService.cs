@@ -41,6 +41,17 @@ public sealed class BridgeService
             _server.Start();
             _frontend = new DgLabFrontendClient(this);
             _frontend.Start(_config.Server.Port);
+
+            if (OperatingSystem.IsMacOS())
+            {
+                _uiNotice = "当前运行平台为 macOS；此平台支持仍属实验性。";
+                ModLog.Warn("macOS support is experimental. Verify install, startup, and control flow carefully.");
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                _uiNotice = "当前运行平台为 Linux/SteamOS；此平台支持仍属实验性。";
+                ModLog.Warn("Linux/SteamOS support is experimental. Verify install, startup, and control flow carefully.");
+            }
         }
     }
 

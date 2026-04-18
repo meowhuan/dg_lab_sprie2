@@ -20,6 +20,21 @@ $manifestPath = Join-Path $repoRoot "manifest.json"
 $manifest = Get-Content -Path $manifestPath | ConvertFrom-Json
 $version = [string]$manifest.version
 
+function Copy-TextFileWithLf {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Source,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Destination
+    )
+
+    $content = [System.IO.File]::ReadAllText($Source)
+    $normalized = $content.Replace("`r`n", "`n").Replace("`r", "`n")
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($Destination, $normalized, $utf8NoBom)
+}
+
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
     $OutputDir = Join-Path $repoRoot "artifacts"
 }
@@ -49,7 +64,7 @@ Copy-Item (Join-Path $repoRoot "manifest.json") $modRoot -Force
 Copy-Item (Join-Path $repoRoot "data\official_waves.json") (Join-Path $modRoot "official_waves.json") -Force
 Copy-Item $installerBatch (Join-Path $packageRoot "install-mod.bat") -Force
 Copy-Item $installerPowerShell (Join-Path $packageRoot "install-mod.ps1") -Force
-Copy-Item $installerShell (Join-Path $packageRoot "install-mod.sh") -Force
+Copy-TextFileWithLf -Source $installerShell -Destination (Join-Path $packageRoot "install-mod.sh")
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.IO.Compression.ZipFile]::CreateFromDirectory($packageRoot, $zipPath)
