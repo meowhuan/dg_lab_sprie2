@@ -80,5 +80,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.package.outputs.zip_path }}
+          body: |
+            Experimental platform note:
+            - Windows is the primary supported platform.
+            - macOS support is experimental.
+            - Linux / SteamOS support is experimental.
+
+            Installer contents:
+            - `install-mod.bat`
+            - `install-mod.ps1`
+            - `install-mod.sh`
+
           generate_release_notes: true
           name: DG-LAB Socket Control v${{ steps.package.outputs.version }}

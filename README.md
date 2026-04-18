@@ -20,12 +20,27 @@ mods/
 dglab_socket_spire2-x.y.z.zip
 ├── install-mod.bat
 ├── install-mod.ps1
+├── install-mod.sh
 └── dglab_socket_spire2/
     ├── dglab_socket_spire2.dll
     ├── manifest.json
     ├── official_waves.json
     └── waves/
 ```
+
+## 平台支持
+
+- `Windows`
+  - 当前主支持平台
+  - 本地安装脚本、发行版安装器、打包流程都已完整覆盖
+- `macOS`
+  - 实验性支持
+  - 运行时逻辑是托管代码 + 本地 HTTP 控制台，理论上可跨端
+  - 目前提供 `.sh` 安装器和构建验证，但还缺少实机长期验证
+- `Linux / SteamOS`
+  - 实验性支持
+  - 安装器按 Steam Linux 库路径做自动索引
+  - SteamOS 视为 Linux 路径变体处理，目前同样属于实验性支持
 
 ## 当前实现
 
@@ -129,6 +144,18 @@ dglab_socket_spire2-x.y.z.zip
 .\scripts\install-mod.ps1 -GameRoot "D:\SteamLibrary\steamapps\common\Slay the Spire 2"
 ```
 
+macOS / Linux / SteamOS 也可以使用 shell 安装脚本：
+
+```bash
+./scripts/install-mod.sh
+```
+
+或显式指定游戏目录：
+
+```bash
+./scripts/install-mod.sh --game-root "/path/to/steamapps/common/Slay the Spire 2"
+```
+
 如果游戏正在运行，Windows 会锁住 `dglab_socket_spire2.dll`，需要先退出游戏再覆盖安装。
 
 也可以只做本地构建：
@@ -158,9 +185,10 @@ dglab_socket_spire2-x.y.z.zip
 
 - `.github/workflows/ci.yml`
   - 用于常规 CI 构建、打包并上传带版本号的 artifact
+  - 会额外在 Windows / macOS / Linux 上做构建验证
 - `.github/workflows/release.yml`
   - 用于 tag 发布版构建，并在 tag push 时自动附加 zip 到 GitHub Release
-  - 发行版 zip 根目录会附带 `install-mod.bat` 和 `install-mod.ps1`
+  - 发行版 zip 根目录会附带 `install-mod.bat`、`install-mod.ps1` 和 `install-mod.sh`
   - 安装器会先自动扫描 Steam 库，找不到游戏时再请求用户输入路径
   - 会校验 Git tag 与 `manifest.json` 的版本一致，约定 tag 形如 `v0.1.0`
 
@@ -179,6 +207,8 @@ dglab_socket_spire2-x.y.z.zip
 3. 提交代码和 `refs/sts2/` 里的引用 DLL。
 4. 打 `v<manifest.version>` 形式的 tag，例如 `v0.1.0`。
 5. `release.yml` 会自动构建发行版 zip、上传 artifact，并把 zip 附加到 GitHub Release。
+
+注意：当前 macOS / Linux / SteamOS 支持仍建议在发行说明和文档里保持“实验性”标识，直到至少完成一轮实机安装、启动和控制链路验证。
 
 ## 说明
 

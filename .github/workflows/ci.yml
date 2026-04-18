@@ -9,7 +9,50 @@ permissions:
   contents: read
 
 jobs:
+  cross-platform-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      STS2_REF_DIR: ${{ github.workspace }}/refs/sts2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Validate STS2 reference assemblies
+        shell: pwsh
+        run: |
+          $required = @("sts2.dll", "GodotSharp.dll", "0Harmony.dll")
+          $missing = @()
+          foreach ($file in $required) {
+            $path = Join-Path $env:STS2_REF_DIR $file
+            if (-not (Test-Path $path)) {
+              $missing += $path
+            }
+          }
+
+          if ($missing.Count -gt 0) {
+            Write-Error "Missing STS2 reference assemblies for CI. Add these files under refs\sts2 or point STS2_REF_DIR to a directory containing them:`n$($missing -join "`n")"
+          }
+
+      - name: Build
+        shell: pwsh
+        run: ./scripts/build-mod.ps1 -Configuration Release -ReferenceDir $env:STS2_REF_DIR
+
   build:
+    needs: cross-platform-build
     runs-on: windows-latest
     env:
       DOTNET_NOLOGO: true

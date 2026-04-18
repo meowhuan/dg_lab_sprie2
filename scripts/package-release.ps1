@@ -15,6 +15,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $buildScript = Join-Path $PSScriptRoot "build-mod.ps1"
 $installerBatch = Join-Path $PSScriptRoot "release-install-mod.bat"
 $installerPowerShell = Join-Path $PSScriptRoot "release-install-mod.ps1"
+$installerShell = Join-Path $PSScriptRoot "release-install-mod.sh"
 $manifestPath = Join-Path $repoRoot "manifest.json"
 $manifest = Get-Content -Path $manifestPath | ConvertFrom-Json
 $version = [string]$manifest.version
@@ -48,8 +49,9 @@ Copy-Item (Join-Path $repoRoot "manifest.json") $modRoot -Force
 Copy-Item (Join-Path $repoRoot "data\official_waves.json") (Join-Path $modRoot "official_waves.json") -Force
 Copy-Item $installerBatch (Join-Path $packageRoot "install-mod.bat") -Force
 Copy-Item $installerPowerShell (Join-Path $packageRoot "install-mod.ps1") -Force
+Copy-Item $installerShell (Join-Path $packageRoot "install-mod.sh") -Force
 
-$archiveInputs = (Get-ChildItem -LiteralPath $packageRoot -Force | Select-Object -ExpandProperty FullName)
-Compress-Archive -Path $archiveInputs -DestinationPath $zipPath -Force
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::CreateFromDirectory($packageRoot, $zipPath)
 
 Write-Output "Packaged release archive: $zipPath"
