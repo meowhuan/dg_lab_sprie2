@@ -1,0 +1,15 @@
+# Build outputs
+bin/
+obj/
+artifacts/
+
+# IDE / editor
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Local logs and temp files
+*.log
+*.tmp
+*.temp

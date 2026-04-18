@@ -1,0 +1,11 @@
+{
+  "id": "dglab_socket_spire2",
+  "name": "DG-LAB Socket Control",
+  "author": "Meowhuan and OpenAI Codex",
+  "description": "DG-LAB SOCKET control bridge for Slay the Spire 2 with gameplay-triggered presets.",
+  "version": "0.1.0",
+  "has_dll": true,
+  "has_pck": false,
+  "dependencies": [],
+  "affects_gameplay": true
+}

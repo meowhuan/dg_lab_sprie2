@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      STS2_REF_DIR: ${{ github.workspace }}\refs\sts2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Validate STS2 reference assemblies
+        shell: pwsh
+        run: |
+          $required = @("sts2.dll", "GodotSharp.dll", "0Harmony.dll")
+          $missing = @()
+          foreach ($file in $required) {
+            $path = Join-Path $env:STS2_REF_DIR $file
+            if (-not (Test-Path $path)) {
+              $missing += $path
+            }
+          }
+
+          if ($missing.Count -gt 0) {
+            Write-Error "Missing STS2 reference assemblies for CI. Add these files under refs\sts2 or point STS2_REF_DIR to a directory containing them:`n$($missing -join "`n")"
+          }
+
+      - name: Build
+        shell: pwsh
+        run: ./scripts/build-mod.ps1 -Configuration Release -ReferenceDir $env:STS2_REF_DIR
+
+      - name: Package
+        id: package
+        shell: pwsh
+        run: |
+          ./scripts/package-release.ps1 -Configuration Release -ReferenceDir $env:STS2_REF_DIR -SkipBuild
+          $zip = Get-ChildItem -Path artifacts -Filter *.zip | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $zip) {
+            throw "CI package archive was not created."
+          }
+
+          $manifest = Get-Content manifest.json | ConvertFrom-Json
+          "zip_path=$($zip.FullName)" >> $env:GITHUB_OUTPUT
+          "version=$($manifest.version)" >> $env:GITHUB_OUTPUT
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dglab_socket_spire2-ci-v${{ steps.package.outputs.version }}
+          path: |
+            ${{ steps.package.outputs.zip_path }}
+            bin/Release/net9.0/dglab_socket_spire2.dll
+            manifest.json
