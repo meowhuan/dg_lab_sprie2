@@ -101,9 +101,14 @@ function Resolve-GameRoot {
 $resolvedGameRoot = Resolve-GameRoot -ExplicitGameRoot $GameRoot
 $modRoot = Join-Path $resolvedGameRoot "mods\dglab_socket_spire2"
 $outputDir = Join-Path $repoRoot "bin\Release\net9.0"
+$outputDll = Join-Path $outputDir "dglab_socket_spire2.dll"
+
+if (-not (Test-Path $outputDll)) {
+    throw "Could not find build output '$outputDll'. The build step did not produce the mod assembly."
+}
 
 New-Item -ItemType Directory -Force -Path $modRoot | Out-Null
-Copy-Item (Join-Path $outputDir "dglab_socket_spire2.dll") $modRoot -Force
+Copy-Item $outputDll $modRoot -Force
 Copy-Item (Join-Path $repoRoot "manifest.json") $modRoot -Force
 Copy-Item (Join-Path $repoRoot "data\official_waves.json") (Join-Path $modRoot "official_waves.json") -Force
 New-Item -ItemType Directory -Force -Path (Join-Path $modRoot "waves") | Out-Null

@@ -13,3 +13,7 @@ artifacts/
 *.log
 *.tmp
 *.temp
+
+# Local .NET CLI state
+.tools/dotnet-cli/
+.tools/nuget-packages/

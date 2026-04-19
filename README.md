@@ -132,6 +132,12 @@ dglab_socket_spire2-x.y.z.zip
 
 ## 构建与安装
 
+前置要求：
+
+- 已安装 `.NET SDK 9.0` 或更高版本
+  - 下载地址：`https://aka.ms/dotnet-download`
+- 仓库内存在 `refs/sts2/` 引用 DLL，或通过 `STS2_REF_DIR` / `-ReferenceDir` 指向有效引用目录
+
 ```powershell
 .\scripts\install-mod.ps1
 ```
@@ -158,11 +164,29 @@ macOS / Linux / SteamOS 也可以使用 shell 安装脚本：
 
 如果游戏正在运行，Windows 会锁住 `dglab_socket_spire2.dll`，需要先退出游戏再覆盖安装。
 
+发行版安装器说明：
+
+- STS2 的 vanilla 和 modded 使用不同的存档目录。首次进入 modded 模式后，如果解锁内容看起来“不见了”，通常不是丢档，而是原版存档还没复制到 modded 存档目录。
+- 发行版 `install-mod.bat` / `install-mod.ps1` / `install-mod.sh` 现在会先提示备份风险，并要求用户先备份存档。
+- 安装器会优先列出本机检测到的备份目录；如果没检测到，会回退显示常见位置。
+  - Windows 常见位置包括 `%APPDATA%\SlayTheSpire2`、`%APPDATA%\SlayTheSpire2\default\1`、`%APPDATA%\SlayTheSpire2\steam\<Steam64ID>` 和 `Steam\userdata\<Steam3AccountID>\2868840`
+  - macOS / Linux / SteamOS 会提示各自常见的本地用户目录或 Steam `userdata/2868840` 路径
+- 安装器会把 mod 文件复制到游戏目录，然后：
+  - 如果还没检测到 modded 存档目录，会询问是否现在辅助开启 mod 环境
+  - 选择后，安装器会先准备匹配的 modded 存档目录，再尝试启动游戏
+  - 用户需要在游戏里选择 `Load Mods`，让游戏重启一次并至少进一次主菜单
+- 安装器随后会列出它检测到的 `vanilla -> modded` 存档路径，并询问是否自动复制原版存档到空的 modded 存档目录。
+  - 推荐自动复制，原版存档会保留
+  - 如果你更想“移动”而不是“复制”，安装器也会把源路径和目标路径打印出来，方便你自己操作
+- 自动迁移是按当前检测到的本地存档根目录和 Steam 账号目录推断的；如果游戏后续选择了别的存档根或别的 Steam 账号，自动迁移可能不会生效。
+
 也可以只做本地构建：
 
 ```powershell
 .\scripts\build-mod.ps1 -Configuration Release
 ```
+
+如果机器上没有可用的 .NET SDK，脚本现在会直接报出前置要求并停止，不会继续进入误导性的复制失败报错。
 
 或打出发行版压缩包：
 
@@ -189,7 +213,10 @@ macOS / Linux / SteamOS 也可以使用 shell 安装脚本：
 - `.github/workflows/release.yml`
   - 用于 tag 发布版构建，并在 tag push 时自动附加 zip 到 GitHub Release
   - 发行版 zip 根目录会附带 `install-mod.bat`、`install-mod.ps1` 和 `install-mod.sh`
-  - 安装器会先自动扫描 Steam 库，找不到游戏时再请求用户输入路径
+  - 安装器会先提示存档路径分离与备份风险，并要求用户确认已备份存档
+  - 安装器会复制 mod 文件、尝试辅助开启 mod 环境，并在需要时提示用户在游戏里选择 `Load Mods`
+  - 安装器会列出 `vanilla -> modded` 存档路径，并询问是否自动复制原版存档到 modded 存档目录
+  - 之后安装器会自动扫描 Steam 库，找不到游戏时再请求用户输入路径
   - 会校验 Git tag 与 `manifest.json` 的版本一致，约定 tag 形如 `v0.1.0`
 
 注意：GitHub 托管 runner 不会自带 STS2 的引用 DLL，因此需要把以下文件放到仓库内的 `refs/sts2/`：

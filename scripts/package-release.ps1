@@ -35,6 +35,20 @@ function Copy-TextFileWithLf {
     [System.IO.File]::WriteAllText($Destination, $normalized, $utf8NoBom)
 }
 
+function Copy-TextFileWithUtf8Bom {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Source,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Destination
+    )
+
+    $content = [System.IO.File]::ReadAllText($Source)
+    $utf8Bom = New-Object System.Text.UTF8Encoding($true)
+    [System.IO.File]::WriteAllText($Destination, $content, $utf8Bom)
+}
+
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
     $OutputDir = Join-Path $repoRoot "artifacts"
 }
@@ -44,6 +58,7 @@ if (-not $SkipBuild) {
 }
 
 $binaryDir = Join-Path $repoRoot "bin\$Configuration\net9.0"
+$binaryPath = Join-Path $binaryDir "dglab_socket_spire2.dll"
 $packageRoot = Join-Path $OutputDir "staging"
 $modRoot = Join-Path $packageRoot "dglab_socket_spire2"
 $zipPath = Join-Path $OutputDir "dglab_socket_spire2-$version.zip"
@@ -59,11 +74,15 @@ if (Test-Path $zipPath) {
 New-Item -ItemType Directory -Force -Path $modRoot | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $modRoot "waves") | Out-Null
 
-Copy-Item (Join-Path $binaryDir "dglab_socket_spire2.dll") $modRoot -Force
+if (-not (Test-Path $binaryPath)) {
+    throw "Could not find build output '$binaryPath'. Run scripts/build-mod.ps1 first or omit -SkipBuild."
+}
+
+Copy-Item $binaryPath $modRoot -Force
 Copy-Item (Join-Path $repoRoot "manifest.json") $modRoot -Force
 Copy-Item (Join-Path $repoRoot "data\official_waves.json") (Join-Path $modRoot "official_waves.json") -Force
 Copy-Item $installerBatch (Join-Path $packageRoot "install-mod.bat") -Force
-Copy-Item $installerPowerShell (Join-Path $packageRoot "install-mod.ps1") -Force
+Copy-TextFileWithUtf8Bom -Source $installerPowerShell -Destination (Join-Path $packageRoot "install-mod.ps1")
 Copy-TextFileWithLf -Source $installerShell -Destination (Join-Path $packageRoot "install-mod.sh")
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem

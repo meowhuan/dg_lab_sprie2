@@ -24,6 +24,9 @@ done
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 PROJECT_PATH="${REPO_ROOT}/dg_lab_socket_spire2.csproj"
+OUTPUT_DIR="${REPO_ROOT}/bin/Release/net9.0"
+OUTPUT_DLL="${OUTPUT_DIR}/dglab_socket_spire2.dll"
+DOTNET_DOWNLOAD_URL="https://aka.ms/dotnet-download"
 
 test_sts2_reference_dir() {
   local path="$1"
@@ -120,16 +123,74 @@ resolve_game_root() {
   done
 }
 
+configure_dotnet_environment() {
+  export DOTNET_CLI_HOME="${REPO_ROOT}/.tools/dotnet-cli"
+  export NUGET_PACKAGES="${REPO_ROOT}/.tools/nuget-packages"
+  export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1
+  export DOTNET_NOLOGO=1
+
+  mkdir -p "${DOTNET_CLI_HOME}" "${NUGET_PACKAGES}"
+}
+
+get_required_sdk_major() {
+  sed -nE 's#.*<TargetFramework>net([0-9]+)\.0</TargetFramework>.*#\1#p' "${PROJECT_PATH}" | head -n 1
+}
+
+assert_dotnet_sdk() {
+  local required_major
+  local sdk_list
+  local installed_major
+
+  if ! command -v dotnet >/dev/null 2>&1; then
+    echo "未检测到 dotnet 命令。构建此项目需要安装 .NET SDK 9.0 或更高版本。" >&2
+    echo "下载地址：${DOTNET_DOWNLOAD_URL}" >&2
+    exit 1
+  fi
+
+  if ! sdk_list="$(dotnet --list-sdks)"; then
+    echo "无法查询当前已安装的 .NET SDK。请安装 .NET SDK 9.0 或更高版本后重试。" >&2
+    echo "下载地址：${DOTNET_DOWNLOAD_URL}" >&2
+    exit 1
+  fi
+
+  required_major="$(get_required_sdk_major)"
+  installed_major="$(
+    printf '%s\n' "${sdk_list}" \
+      | sed -nE 's/^([0-9]+)\..*/\1/p' \
+      | sort -n \
+      | tail -n 1
+  )"
+
+  if [[ -n "${required_major}" ]] && [[ -z "${installed_major}" || "${installed_major}" -lt "${required_major}" ]]; then
+    if [[ -n "${sdk_list//[[:space:]]/}" ]]; then
+      echo "此项目目标框架为 net${required_major}.0，需要 .NET SDK ${required_major}.0 或更高版本。" >&2
+      echo "当前已安装 SDK：${sdk_list//$'\n'/, }" >&2
+    else
+      echo "此项目目标框架为 net${required_major}.0，需要 .NET SDK ${required_major}.0 或更高版本。" >&2
+      echo "当前未检测到任何 .NET SDK。" >&2
+    fi
+    echo "下载地址：${DOTNET_DOWNLOAD_URL}" >&2
+    exit 1
+  fi
+}
+
 REFERENCE_DIR_RESOLVED="$(resolve_reference_dir)"
 echo "Using STS2 reference directory: ${REFERENCE_DIR_RESOLVED}"
+configure_dotnet_environment
+assert_dotnet_sdk
 dotnet build "${PROJECT_PATH}" -c Release "/p:Sts2ReferenceDir=${REFERENCE_DIR_RESOLVED}"
 
 GAME_ROOT_RESOLVED="$(resolve_game_root)"
 MOD_ROOT="${GAME_ROOT_RESOLVED}/mods/dglab_socket_spire2"
-OUTPUT_DIR="${REPO_ROOT}/bin/Release/net9.0"
+
+if [[ ! -f "${OUTPUT_DLL}" ]]; then
+  echo "Could not find build output '${OUTPUT_DLL}'. The build step did not produce the mod assembly." >&2
+  exit 1
+fi
 
 mkdir -p "${MOD_ROOT}/waves"
-cp -f "${OUTPUT_DIR}/dglab_socket_spire2.dll" "${MOD_ROOT}/"
+cp -f "${OUTPUT_DLL}" "${MOD_ROOT}/"
 cp -f "${REPO_ROOT}/manifest.json" "${MOD_ROOT}/"
 cp -f "${REPO_ROOT}/data/official_waves.json" "${MOD_ROOT}/official_waves.json"
 
