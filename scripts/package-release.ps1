@@ -29,7 +29,7 @@ function Copy-TextFileWithLf {
         [string]$Destination
     )
 
-    $content = [System.IO.File]::ReadAllText($Source)
+    $content = [System.IO.File]::ReadAllText($Source, [System.Text.Encoding]::UTF8)
     $normalized = $content.Replace("`r`n", "`n").Replace("`r", "`n")
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($Destination, $normalized, $utf8NoBom)
@@ -44,7 +44,7 @@ function Copy-TextFileWithUtf8Bom {
         [string]$Destination
     )
 
-    $content = [System.IO.File]::ReadAllText($Source)
+    $content = [System.IO.File]::ReadAllText($Source, [System.Text.Encoding]::UTF8)
     $utf8Bom = New-Object System.Text.UTF8Encoding($true)
     [System.IO.File]::WriteAllText($Destination, $content, $utf8Bom)
 }
