@@ -110,7 +110,8 @@ if (-not (Test-Path $outputDll)) {
 New-Item -ItemType Directory -Force -Path $modRoot | Out-Null
 Copy-Item $outputDll $modRoot -Force
 Copy-Item (Join-Path $repoRoot "manifest.json") $modRoot -Force
-Copy-Item (Join-Path $repoRoot "data\official_waves.json") (Join-Path $modRoot "official_waves.json") -Force
+Remove-Item (Join-Path $modRoot "official_waves.json") -Force -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $repoRoot "data\official_waves.json") (Join-Path $modRoot "official_waves.wave") -Force
 New-Item -ItemType Directory -Force -Path (Join-Path $modRoot "waves") | Out-Null
 
 $legacyConfig = Join-Path $modRoot "config.json"

@@ -80,7 +80,7 @@ if (-not (Test-Path $binaryPath)) {
 
 Copy-Item $binaryPath $modRoot -Force
 Copy-Item (Join-Path $repoRoot "manifest.json") $modRoot -Force
-Copy-Item (Join-Path $repoRoot "data\official_waves.json") (Join-Path $modRoot "official_waves.json") -Force
+Copy-Item (Join-Path $repoRoot "data\official_waves.json") (Join-Path $modRoot "official_waves.wave") -Force
 Copy-Item $installerBatch (Join-Path $packageRoot "install-mod.bat") -Force
 Copy-TextFileWithUtf8Bom -Source $installerPowerShell -Destination (Join-Path $packageRoot "install-mod.ps1")
 Copy-TextFileWithLf -Source $installerShell -Destination (Join-Path $packageRoot "install-mod.sh")

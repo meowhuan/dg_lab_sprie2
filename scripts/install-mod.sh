@@ -41,6 +41,8 @@ resolve_reference_dir() {
     "${STS2_REF_DIR:-}" \
     "${REPO_ROOT}/refs/sts2" \
     "${GameDir:-}" \
+    "${HOME}/Library/Application Support/Steam/steamapps/common/Slay the Spire 2/SlayTheSpire2.app/Contents/Resources/data_sts2_macos_arm64" \
+    "${HOME}/Library/Application Support/Steam/steamapps/common/Slay the Spire 2/SlayTheSpire2.app/Contents/Resources/data_sts2_macos_x86_64" \
     "${HOME}/Library/Application Support/Steam/steamapps/common/Slay the Spire 2/data_sts2_macos" \
     "${HOME}/.local/share/Steam/steamapps/common/Slay the Spire 2/data_sts2_linux_x86_64" \
     "${HOME}/.steam/steam/steamapps/common/Slay the Spire 2/data_sts2_linux_x86_64"
@@ -123,6 +125,22 @@ resolve_game_root() {
   done
 }
 
+resolve_mods_root() {
+  local game_root="$1"
+
+  for app_bundle in \
+    "${game_root}/SlayTheSpire2.app" \
+    "${game_root}/Slay the Spire 2.app"
+  do
+    if [[ -d "${app_bundle}/Contents/MacOS" ]]; then
+      printf '%s\n' "${app_bundle}/Contents/MacOS/mods"
+      return 0
+    fi
+  done
+
+  printf '%s\n' "${game_root}/mods"
+}
+
 configure_dotnet_environment() {
   export DOTNET_CLI_HOME="${REPO_ROOT}/.tools/dotnet-cli"
   export NUGET_PACKAGES="${REPO_ROOT}/.tools/nuget-packages"
@@ -182,7 +200,7 @@ assert_dotnet_sdk
 dotnet build "${PROJECT_PATH}" -c Release "/p:Sts2ReferenceDir=${REFERENCE_DIR_RESOLVED}"
 
 GAME_ROOT_RESOLVED="$(resolve_game_root)"
-MOD_ROOT="${GAME_ROOT_RESOLVED}/mods/dglab_socket_spire2"
+MOD_ROOT="$(resolve_mods_root "${GAME_ROOT_RESOLVED}")/dglab_socket_spire2"
 
 if [[ ! -f "${OUTPUT_DLL}" ]]; then
   echo "Could not find build output '${OUTPUT_DLL}'. The build step did not produce the mod assembly." >&2
@@ -192,7 +210,8 @@ fi
 mkdir -p "${MOD_ROOT}/waves"
 cp -f "${OUTPUT_DLL}" "${MOD_ROOT}/"
 cp -f "${REPO_ROOT}/manifest.json" "${MOD_ROOT}/"
-cp -f "${REPO_ROOT}/data/official_waves.json" "${MOD_ROOT}/official_waves.json"
+rm -f "${MOD_ROOT}/official_waves.json"
+cp -f "${REPO_ROOT}/data/official_waves.json" "${MOD_ROOT}/official_waves.wave"
 
 if [[ -f "${MOD_ROOT}/config.json" ]]; then
   if [[ ! -f "${MOD_ROOT}/dglab_socket_spire2.cfg" ]]; then

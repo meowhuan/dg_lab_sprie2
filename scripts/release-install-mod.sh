@@ -96,6 +96,22 @@ resolve_game_root() {
   done
 }
 
+resolve_mods_root() {
+  local game_root="$1"
+
+  for app_bundle in \
+    "${game_root}/SlayTheSpire2.app" \
+    "${game_root}/Slay the Spire 2.app"
+  do
+    if [[ -d "${app_bundle}/Contents/MacOS" ]]; then
+      printf '%s\n' "${app_bundle}/Contents/MacOS/mods"
+      return 0
+    fi
+  done
+
+  printf '%s\n' "${game_root}/mods"
+}
+
 get_save_appdata_roots() {
   printf '%s\n' \
     "${HOME}/Library/Application Support/SlayTheSpire2" \
@@ -252,7 +268,7 @@ confirm_backup_done() {
 
 install_packaged_mod() {
   local resolved_game_root="$1"
-  local mod_root="${resolved_game_root}/mods/dglab_socket_spire2"
+  local mod_root="$(resolve_mods_root "${resolved_game_root}")/dglab_socket_spire2"
 
   mkdir -p "${mod_root}"
   cp -fR "${MOD_SOURCE_ROOT}/." "${mod_root}/"

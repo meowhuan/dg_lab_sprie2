@@ -3,7 +3,7 @@
   "name": "DG-LAB Socket Control",
   "author": "Meowhuan and OpenAI Codex",
   "description": "DG-LAB SOCKET control bridge for Slay the Spire 2 with gameplay-triggered presets. macOS/Linux/SteamOS support is experimental.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "has_dll": true,
   "has_pck": false,
   "dependencies": [],

@@ -24,7 +24,7 @@ dglab_socket_spire2-x.y.z.zip
 └── dglab_socket_spire2/
     ├── dglab_socket_spire2.dll
     ├── manifest.json
-    ├── official_waves.json
+    ├── official_waves.wave
     └── waves/
 ```
 
@@ -35,8 +35,9 @@ dglab_socket_spire2-x.y.z.zip
   - 本地安装脚本、发行版安装器、打包流程都已完整覆盖
 - `macOS`
   - 实验性支持
-  - 运行时逻辑是托管代码 + 本地 HTTP 控制台，理论上可跨端
-  - 目前提供 `.sh` 安装器和构建验证，但还缺少实机长期验证
+  - 已在 Apple Silicon macOS 上完成构建、安装、游戏加载和本地控制台访问验证
+  - 安装器会把 mod 放到 `SlayTheSpire2.app/Contents/MacOS/mods/`，这是 STS2 macOS 版本实际扫描的 mod 目录
+  - 运行时逻辑是托管代码 + 本地 HTTP 控制台，仍建议不同 macOS / Steam 环境继续做实机验证
 - `Linux / SteamOS`
   - 实验性支持
   - 安装器按 Steam Linux 库路径做自动索引
@@ -129,6 +130,12 @@ dglab_socket_spire2-x.y.z.zip
   - `CombatHeavy`
   - `RewardHeavy`
   - `Minimal`
+
+## 波形文件
+
+内置波形随发行包安装为 `official_waves.wave`。自定义波形请放在 mod 目录下的 `waves/` 子目录中，并使用 `.wave` 扩展名。
+
+`.wave` 文件内容仍然是 JSON，扩展名改为 `.wave` 是为了避免 STS2 的 mod loader 把非 manifest 的 `.json` 文件误当作 mod manifest 扫描。
 
 ## 构建与安装
 

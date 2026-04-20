@@ -195,7 +195,7 @@ internal static class WaveLibrary
     {
         _waves = new Dictionary<string, string[]>(FallbackWaves, StringComparer.OrdinalIgnoreCase);
         var rootDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? AppContext.BaseDirectory;
-        LoadOfficialFile(Path.Combine(rootDir, "official_waves.json"));
+        LoadOfficialFile(Path.Combine(rootDir, "official_waves.wave"));
         LoadCustomDirectory(Path.Combine(rootDir, "waves"));
         ModLog.Info($"Wave library loaded: {_waves.Count} waves.");
     }
@@ -235,7 +235,7 @@ internal static class WaveLibrary
         try
         {
             Directory.CreateDirectory(dirPath);
-            foreach (var file in Directory.GetFiles(dirPath, "*.json", SearchOption.TopDirectoryOnly))
+            foreach (var file in Directory.GetFiles(dirPath, "*.wave", SearchOption.TopDirectoryOnly))
             {
                 try
                 {
